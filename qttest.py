@@ -17,4 +17,4 @@ w.show()
 app.exec()
 
 #  sudo apt update
-#  sudo apt install libqt6desiner6
+#  sudo apt install libqt6designer6
