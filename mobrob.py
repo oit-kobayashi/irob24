@@ -16,8 +16,9 @@ class Robot:
         dy = 2 * r * np.sin(dth / 2) * np.sin(th + dth / 2)
         self.p += [[dx], [dy], [dth]]
 
-r = Robot(0, 0, 0.2)
-for _ in range(5):
-    r.move(dsr=0.1, dsl=0.101)
-    print(r)
+if __name__ == '__main__':
+    r = Robot(0, 0, 0.2)
+    for _ in range(5):
+        r.move(dsr=0.1, dsl=0.101)
+        print(r)
     
