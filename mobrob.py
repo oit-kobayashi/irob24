@@ -3,7 +3,7 @@ import numpy as np
 class Robot:
     b = 0.3
     def __init__(self, x=0, y=0, th=0):
-        self.p = np.array([[x], [y], [th]])
+        self.p = np.array([[x], [y], [th]], dtype=np.float32)
 
     def __str__(self):
         return '--- robot ---\n' + str(self.p)
