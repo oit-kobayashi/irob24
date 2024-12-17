@@ -29,17 +29,14 @@ class Canvas(QWidget):
         super().__init__()
         self.setFixedSize(self.W, self.H)
 
-    def paintEvent(self, ev):
+    def _drawRobot(self, p, stroke: QColor, fill: QColor):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBackground(Qt.black)
-        painter.eraseRect(0, 0, self.W, self.H)
-        pen = QPen(Qt.white, 1.5)
+        pen = QPen(stroke, 1.5)
         painter.setPen(pen)
-        painter.setBrush(QColor(70, 70, 70))
-        x = self.robot.p[0, 0]
-        y = self.robot.p[1, 0]
-        t = self.robot.p[2, 0]
+        painter.setBrush(fill)
+        x = p[0, 0]
+        y = p[1, 0]
+        t = p[2, 0]
         r = self.robot.b / 2
         # draw robot
         painter.translate(self._x(x), self._y(y))
@@ -48,6 +45,15 @@ class Canvas(QWidget):
         painter.drawLine(0, 0, self._s(0.5), 0)  # direction
         painter.drawRects([QRect(self._s(-0.1), self._s(r), self._s(0.2), self._s(0.05))])
         painter.drawRects([QRect(self._s(-0.1), self._s(-r), self._s(0.2), self._s(-0.05))])
+        
+        
+    def paintEvent(self, ev):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBackground(Qt.black)
+        painter.eraseRect(0, 0, self.W, self.H)
+        self._drawRobot(self.robot.p0, Qt.white, QColor(70, 70, 70))
+        self._drawRobot(self.robot.p, Qt.cyan, QColor(130, 180, 180, 180))
 
 class App(QWidget):
     def __init__(self):
