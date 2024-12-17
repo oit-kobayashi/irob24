@@ -5,13 +5,11 @@ from PySide6.QtGui import *
 from PySide6.QtCore import *
 from mobrob import Robot
 
-Wr = 10  # 実際の幅(m)
-Hr = 10
 
 class Canvas(QWidget):
     W = 800  # 画面の幅(pixel)
     H = 800
-    scale = W / Wr  # スケールファクタの初期値 (幅基準)
+    scale = W / 10  # スケールファクタの初期値 (幅基準)
     # 実際の座標をピクセル座標に変換する関数
     def _x(self, x):
         return x * self.scale + self.W / 2
