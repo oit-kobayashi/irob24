@@ -22,12 +22,26 @@ class Canvas(QWidget):
 
     def updateScale(self, mag):
         self.scale = self.scale * mag
-        return self.scale
 
     def __init__(self, r):
         self.robot = r
         super().__init__()
         self.setFixedSize(self.W, self.H)
+
+
+    def _drawBelief(self,
+                    p: np.array,     # pose (expectation)
+                    sigma: np.array, # sigma (covariance matrix)
+                    stroke: QColor):
+        painter = QPainter(self)
+        painter.setPen(QPen(stroke, 1))
+        x = p[0, 0]
+        y = p[1, 0]
+        # t = p[2, 0]
+        painter.translate(self._x(x), self._y(y))
+        painter.rotate(10)
+        painter.drawEllipse(QPoint(0, 0), self._s(3), self._s(2))
+        
 
     def _drawRobot(self, p, stroke: QColor, fill: QColor):
         painter = QPainter(self)
@@ -46,13 +60,23 @@ class Canvas(QWidget):
         painter.drawRects([QRect(self._s(-0.1), self._s(r), self._s(0.2), self._s(0.05))])
         painter.drawRects([QRect(self._s(-0.1), self._s(-r), self._s(0.2), self._s(-0.05))])
         
-        
+
     def paintEvent(self, ev):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBackground(Qt.black)
         painter.eraseRect(0, 0, self.W, self.H)
+        painter.setPen(QPen(Qt.green, 0.5))
+        # grid
+        for i in range(-20, 20):
+            painter.drawLine(self._x(i), self._y(-20), self._x(i), self._y(20))
+            painter.drawLine(self._x(-20), self._y(i), self._x(20), self._y(i))
+        painter.setPen(QPen(Qt.green, 1))
+        painter.drawLine(self._x(0), self._y(-20), self._x(0), self._y(20))
+        painter.drawLine(self._x(-20), self._y(0), self._x(20), self._y(0))
+        #
         self._drawRobot(self.robot.p0, Qt.white, QColor(70, 70, 70))
+        self._drawBelief(self.robot.p, None, QColor(130, 180, 180, 180))
         self._drawRobot(self.robot.p, Qt.cyan, QColor(130, 180, 180, 180))
 
 class App(QWidget):
@@ -64,11 +88,13 @@ class App(QWidget):
         layoutH = QHBoxLayout(self)
         self.canvas = Canvas(self.robot)
         self.btnQ = QPushButton("QUIT")
+        self.btnP = QPushButton("pause")
         self.btnZdec = QPushButton("zoom-")
         self.btnZinc = QPushButton("zoom+")
         self.btnQ.clicked.connect(lambda: sys.exit(0))
-        self.btnZdec.clicked.connect(lambda: self.canvas.updateScale(0.9))
-        self.btnZinc.clicked.connect(lambda: self.canvas.updateScale(1.1))
+        self.btnP.clicked.connect(self.pauseResume)
+        self.btnZdec.clicked.connect(lambda: self.canvas.updateScale(0.9) or self.update())
+        self.btnZinc.clicked.connect(lambda: self.canvas.updateScale(1.1) or self.update())
         self.labelX = QLabel("x")
         self.labelY = QLabel("y")
         self.labelT = QLabel("th")
@@ -81,6 +107,7 @@ class App(QWidget):
         layoutV.addWidget(infoFrame)
         layoutV.addWidget(self.btnZinc)
         layoutV.addWidget(self.btnZdec)
+        layoutV.addWidget(self.btnP)
         layoutV.addWidget(self.btnQ)
         layoutV2 = QVBoxLayout(infoFrame)
         layoutV2.addWidget(self.labelX)
@@ -95,6 +122,11 @@ class App(QWidget):
         self.timer.timeout.connect(self.step)
         self.timer.start()
 
+    def pauseResume(self):
+        if self.timer.isActive():
+            self.timer.stop()
+        else:
+            self.timer.start()
 
     def step(self):  # interval function
         self.robot.move(0.01, 0.015)
