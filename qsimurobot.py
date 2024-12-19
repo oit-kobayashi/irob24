@@ -83,6 +83,8 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.robot = Robot()
+        self.dsl = 0.002
+        self.dsr = 0.00111111111
 
         # setup GUI
         layoutH = QHBoxLayout(self)
@@ -128,8 +130,17 @@ class App(QWidget):
         else:
             self.timer.start()
 
+    def keyPressEvent(self, e: QKeyEvent):
+        print(e, e.key())
+        if e.key() == Qt.Key.Key_Left:
+            self.dsl += -0.0005
+            self.dsr +=  0.0005
+        elif e.key() == Qt.Key.Key_Right:
+            self.dsr += -0.0005
+            self.dsl +=  0.0005
+
     def step(self):  # interval function
-        self.robot.move(0.01, 0.015)
+        self.robot.move(self.dsr, self.dsl)
         self.update()
         # update info labels
         x = self.robot.p[0, 0]
@@ -142,6 +153,7 @@ class App(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainW = App()
+    mainW.setFocus()
     mainW.show()
     app.exec()
     
