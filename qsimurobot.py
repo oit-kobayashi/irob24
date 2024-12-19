@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import numpy.linalg as la
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
@@ -39,8 +40,14 @@ class Canvas(QWidget):
         y = p[1, 0]
         # t = p[2, 0]
         painter.translate(self._x(x), self._y(y))
-        painter.rotate(10)
-        painter.drawEllipse(QPoint(0, 0), self._s(3), self._s(2))
+
+        sigma_xy = sigma[0:2, 0:2]
+        w, p = la.eig(sigma_xy)
+        p0x = p[0, 0]
+        p0y = p[1, 0]
+        angle = -np.atan2(p0y, p0x) * 180 / np.pi
+        painter.rotate(angle)
+        painter.drawEllipse(QPoint(0, 0), self._s(float(np.sqrt(w[0]))), self._s(float(np.sqrt(w[1]))))
         
 
     def _drawRobot(self, p, stroke: QColor, fill: QColor):
@@ -76,7 +83,7 @@ class Canvas(QWidget):
         painter.drawLine(self._x(-20), self._y(0), self._x(20), self._y(0))
         #
         self._drawRobot(self.robot.p0, Qt.white, QColor(70, 70, 70))
-        self._drawBelief(self.robot.p, None, QColor(130, 180, 180, 180))
+        self._drawBelief(self.robot.p, self.robot.sigma_p, QColor(130, 180, 180, 180))
         self._drawRobot(self.robot.p, Qt.cyan, QColor(130, 180, 180, 180))
 
 class App(QWidget):
@@ -138,6 +145,13 @@ class App(QWidget):
         elif e.key() == Qt.Key.Key_Right:
             self.dsr += -0.0005
             self.dsl +=  0.0005
+        elif e.key() == Qt.Key.Key_Up:
+            self.dsr +=  0.0005
+            self.dsl +=  0.0005
+        elif e.key() == Qt.Key.Key_Down:
+            self.dsr += -0.0005
+            self.dsl += -0.0005
+        
 
     def step(self):  # interval function
         self.robot.move(self.dsr, self.dsl)
