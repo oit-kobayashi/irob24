@@ -170,7 +170,10 @@ class App(QWidget):
         self.t += 1
         self.robot.move(self.dsr, self.dsl)
         if self.t % 600 == 0:
-            robot.perception(np.random.randn(3) * [1, 1, 0.25])
+            self.robot.perception(
+                self.robot.p0 + np.random.randn(3) * [1, 1, 0.25],
+                np.diag([2, 2, 0.5**2])
+            )
         self.update()
         # update info labels
         x = self.robot.p[0, 0]

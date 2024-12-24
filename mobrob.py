@@ -19,7 +19,7 @@ class Robot:
         dy = 2 * r * np.sin(dth / 2) * np.sin(th + dth / 2)
         self.p0 += [[dx], [dy], [dth]]
         # estimated
-        sigma_u = np.abs(np.diag([dsr * 0.01, dsl * 0.01]).astype(np.float32))
+        sigma_u = np.abs(np.diag([dsr * 0.03, dsl * 0.03]).astype(np.float32))
         th = self.p[2, 0]  # p_theta
         tt = th + (dsr - dsl) / 2 / self.b
         jp = np.array([
@@ -35,16 +35,26 @@ class Robot:
             [1 / self.b, -1 / self.b]
         ], dtype=np.float32)
         self.sigma_p = jp.dot(self.sigma_p).dot(jp.T) + ju.dot(sigma_u).dot(ju.T)
-        dsr += np.random.randn() * 0.002
-        dsl += np.random.randn() * 0.002
+        dsr += np.random.randn() * 0.001
+        dsl += np.random.randn() * 0.001
         dth = (dsr - dsl) / self.b
         r = (dsr + dsl) / (2 * dth)
         dx = 2 * r * np.sin(dth / 2) * np.cos(th + dth / 2)
         dy = 2 * r * np.sin(dth / 2) * np.sin(th + dth / 2)
         self.p += [[dx], [dy], [dth]]
 
-    def perception(self, pz: np.ndarray):
-        pass
+    def perception(self,
+                   pz: np.ndarray,
+                   sz: np.ndarray):
+        s1 = self.sigma_p
+        s2 = sz
+        u1 = self.p
+        u2 = pz
+        k = s1.dot(np.linalg.inv(s1 + s2))
+        u = u1 + k.dot(u2 - u1)
+        s = s1 - k.dot(s1 + s2).dot(k.T)
+        self.p = u
+        self.sigma_p = s
 
 if __name__ == '__main__':
     r = Robot(0, 0, 0.2)
