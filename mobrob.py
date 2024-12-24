@@ -5,7 +5,7 @@ class Robot:
     def __init__(self, x=0, y=0, th=0):
         self.p = np.array([[x], [y], [th]], dtype=np.float32)
         self.p0 = np.array([[x], [y], [th]], dtype=np.float32)
-        self.sigma_p = np.diag([1, 2, 1]).astype(np.float32)
+        self.sigma_p = np.diag([1, 1, 0.25]).astype(np.float32)
 
     def __str__(self):
         return f'--- robot ---p: {str(self.p)}\np0: {str(self.p0)}\n'
@@ -20,7 +20,6 @@ class Robot:
         self.p0 += [[dx], [dy], [dth]]
         # estimated
         sigma_u = np.abs(np.diag([dsr * 0.01, dsl * 0.01]).astype(np.float32))
-        print(sigma_u)
         th = self.p[2, 0]  # p_theta
         tt = th + (dsr - dsl) / 2 / self.b
         jp = np.array([
@@ -43,6 +42,9 @@ class Robot:
         dx = 2 * r * np.sin(dth / 2) * np.cos(th + dth / 2)
         dy = 2 * r * np.sin(dth / 2) * np.sin(th + dth / 2)
         self.p += [[dx], [dy], [dth]]
+
+    def perception(self, pz: np.ndarray):
+        pass
 
 if __name__ == '__main__':
     r = Robot(0, 0, 0.2)

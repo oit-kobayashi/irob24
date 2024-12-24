@@ -42,13 +42,23 @@ class Canvas(QWidget):
         painter.translate(self._x(x), self._y(y))
 
         sigma_xy = sigma[0:2, 0:2]
-        w, p = la.eig(sigma_xy)
-        p0x = p[0, 0]
-        p0y = p[1, 0]
+        sigma_t  = np.sqrt(sigma[2, 2])
+        w, v = la.eig(sigma_xy)
+        p0x = v[0, 0]
+        p0y = v[1, 0]
         angle = -np.atan2(p0y, p0x) * 180 / np.pi
+        painter.save()
         painter.rotate(angle)
         painter.drawEllipse(QPoint(0, 0), self._s(float(np.sqrt(w[0]))), self._s(float(np.sqrt(w[1]))))
-        
+
+        painter.restore()
+        painter.rotate(-p[2, 0] * 180 / np.pi)
+        painter.drawLine(0, 0, self._s(float(np.cos(sigma_t))), self._s(float(np.sin(sigma_t))))
+        painter.drawLine(0, 0, self._s(float(np.cos(sigma_t))), self._s(float(np.sin(-sigma_t))))
+        painter.drawLines([
+            QPoint(self._s(float(np.cos(sigma_t))), self._s(float(np.sin(sigma_t)))),
+            QPoint(0, 0),
+            QPoint(self._s(float(np.cos(sigma_t))), self._s(float(np.sin(-sigma_t))))])
 
     def _drawRobot(self, p, stroke: QColor, fill: QColor):
         painter = QPainter(self)
@@ -92,6 +102,7 @@ class App(QWidget):
         self.robot = Robot()
         self.dsl = 0.002
         self.dsr = 0.00111111111
+        self.t = 0    # time counter
 
         # setup GUI
         layoutH = QHBoxLayout(self)
@@ -107,6 +118,7 @@ class App(QWidget):
         self.labelX = QLabel("x")
         self.labelY = QLabel("y")
         self.labelT = QLabel("th")
+        self.labelTime = QLabel("time")
         right = QWidget()
         layoutV = QVBoxLayout(right)
         layoutH.addWidget(self.canvas)
@@ -119,6 +131,7 @@ class App(QWidget):
         layoutV.addWidget(self.btnP)
         layoutV.addWidget(self.btnQ)
         layoutV2 = QVBoxLayout(infoFrame)
+        layoutV2.addWidget(self.labelTime)
         layoutV2.addWidget(self.labelX)
         layoutV2.addWidget(self.labelY)
         layoutV2.addWidget(self.labelT)
@@ -154,7 +167,10 @@ class App(QWidget):
         
 
     def step(self):  # interval function
+        self.t += 1
         self.robot.move(self.dsr, self.dsl)
+        if self.t % 600 == 0:
+            robot.perception(np.random.randn(3) * [1, 1, 0.25])
         self.update()
         # update info labels
         x = self.robot.p[0, 0]
@@ -163,6 +179,7 @@ class App(QWidget):
         self.labelX.setText(f"x={x:.4f}")
         self.labelY.setText(f"y={y:.4f}")
         self.labelT.setText(f"th={t:.4f}")
+        self.labelTime.setText(f"T={self.t:8d}")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
