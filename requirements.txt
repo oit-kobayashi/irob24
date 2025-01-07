@@ -1,4 +1,5 @@
 # pip install -r requirements.txt
 numpy
 PySide6
-
+gymnasium
+pygame

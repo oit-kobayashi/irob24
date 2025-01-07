@@ -10,13 +10,22 @@ from mobrob import Robot
 class Canvas(QWidget):
     W = 800  # 画面の幅(pixel)
     H = 800
+    track = False   # ロボットを中心に描画するか?
     scale = W / 10  # スケールファクタの初期値 (幅基準)
-    # 実際の座標をピクセル座標に変換する関数
-    def _x(self, x):
-        return x * self.scale + self.W / 2
 
-    def _y(self, y):
-        return -y * self.scale + self.H / 2
+    def setTrack(self, t: bool) -> None:
+        self.track = t
+    
+    # 実際の座標をピクセル座標に変換する関数
+    def _x(self, x) -> int:
+        if self.track:
+            x = x - self.robot.p0[0, 0]
+        return int(x * self.scale + self.W / 2)
+
+    def _y(self, y) -> int:
+        if self.track:
+            y = y - self.robot.p0[1, 0]
+        return int(-y * self.scale + self.H / 2)
 
     def _s(self, r):  # 幅を基準にスケール変換
         return r * self.scale
@@ -85,9 +94,10 @@ class Canvas(QWidget):
         painter.eraseRect(0, 0, self.W, self.H)
         painter.setPen(QPen(Qt.green, 0.5))
         # grid
+        ix, iy = list(self.robot.p0[0:2, 0].astype(np.int32))
         for i in range(-20, 20):
-            painter.drawLine(self._x(i), self._y(-20), self._x(i), self._y(20))
-            painter.drawLine(self._x(-20), self._y(i), self._x(20), self._y(i))
+            painter.drawLine(self._x(ix + i), self._y(iy -20), self._x(ix + i), self._y(iy + 20))
+            painter.drawLine(self._x(ix - 20), self._y(iy + i), self._x(ix + 20), self._y(iy + i))
         painter.setPen(QPen(Qt.green, 1))
         painter.drawLine(self._x(0), self._y(-20), self._x(0), self._y(20))
         painter.drawLine(self._x(-20), self._y(0), self._x(20), self._y(0))
@@ -111,6 +121,11 @@ class App(QWidget):
         self.btnP = QPushButton("pause")
         self.btnZdec = QPushButton("zoom-")
         self.btnZinc = QPushButton("zoom+")
+        self.toggleTrack = QToolButton()
+        self.toggleTrack.setText("track")
+        self.toggleTrack.setCheckable(True)
+        self.toggleTrack.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toggleTrack.clicked.connect(lambda: self.canvas.setTrack(self.toggleTrack.isChecked()))
         self.btnQ.clicked.connect(lambda: sys.exit(0))
         self.btnP.clicked.connect(self.pauseResume)
         self.btnZdec.clicked.connect(lambda: self.canvas.updateScale(0.9) or self.update())
@@ -126,6 +141,7 @@ class App(QWidget):
         infoFrame = QFrame()
         infoFrame.setFrameShape(QFrame.StyledPanel)
         layoutV.addWidget(infoFrame)
+        layoutV.addWidget(self.toggleTrack)
         layoutV.addWidget(self.btnZinc)
         layoutV.addWidget(self.btnZdec)
         layoutV.addWidget(self.btnP)
