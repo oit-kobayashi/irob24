@@ -3,3 +3,5 @@ numpy
 PySide6
 gymnasium
 pygame
+torch
+matplotlib
