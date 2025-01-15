@@ -27,6 +27,9 @@ model = nn.Sequential(
     nn.Linear(10, 10),
     nn.ReLU(),
 
+    nn.Linear(10, 10),
+    nn.ReLU(),
+
     nn.Linear(10, 2),
     nn.Softmax(dim=1)
 )
